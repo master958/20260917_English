@@ -27,11 +27,11 @@ export function ReadingPassagePage() {
   }, [passageId]);
 
   if (passage === undefined) {
-    return <p className="text-gray-500">불러오는 중...</p>;
+    return <p className="text-gray-500 dark:text-gray-400">불러오는 중...</p>;
   }
 
   if (passage === null) {
-    return <p className="text-gray-500">지문을 찾을 수 없습니다.</p>;
+    return <p className="text-gray-500 dark:text-gray-400">지문을 찾을 수 없습니다.</p>;
   }
 
   const handleComplete = (quizResult: QuizCompleteResult) => {
@@ -41,19 +41,21 @@ export function ReadingPassagePage() {
 
   return (
     <div className="space-y-6">
-      <Link to="/reading" className="text-sm text-blue-600 hover:underline">
+      <Link to="/reading" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
         ← 독해 목록으로
       </Link>
-      <h1 className="text-2xl font-bold text-gray-900">{passage.title}</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{passage.title}</h1>
 
-      <section className="rounded-lg border border-gray-200 bg-white p-5">
+      <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
         <GlossaryText text={passage.body} glossary={glossary} />
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold text-gray-900">이해도 확인 문제</h2>
+        <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
+          이해도 확인 문제
+        </h2>
         {result && (
-          <p className="mb-4 rounded-md bg-blue-50 p-3 text-sm font-medium text-blue-800">
+          <p className="mb-4 rounded-md bg-blue-50 p-3 text-sm font-medium text-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
             결과: {result.correctCount} / {result.totalCount}개 정답
           </p>
         )}

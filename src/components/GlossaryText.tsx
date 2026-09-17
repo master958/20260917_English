@@ -21,7 +21,7 @@ export function GlossaryText({ text, glossary }: GlossaryTextProps) {
   const tokens = text.split(/(\s+)/);
 
   return (
-    <p className="text-lg leading-relaxed text-gray-800">
+    <p className="text-lg leading-relaxed text-gray-800 dark:text-gray-200">
       {tokens.map((token, index) => {
         if (token === "" || /^\s+$/.test(token)) {
           return <span key={index}>{token}</span>;
@@ -37,7 +37,7 @@ export function GlossaryText({ text, glossary }: GlossaryTextProps) {
           <span key={index} className="relative inline-block">
             <button
               type="button"
-              className="text-blue-600 underline decoration-dotted underline-offset-4 hover:text-blue-800"
+              className="text-blue-600 underline decoration-dotted underline-offset-4 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
               onClick={() => setActiveWordKey(isActive ? null : wordKey)}
             >
               {token}

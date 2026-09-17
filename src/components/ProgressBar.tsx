@@ -6,13 +6,13 @@ interface ProgressBarProps {
 export function ProgressBar({ percentage }: ProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, percentage));
   return (
-    <div className="h-3 w-full rounded-full bg-gray-200">
+    <div className="h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700">
       <div
         role="progressbar"
         aria-valuenow={clamped}
         aria-valuemin={0}
         aria-valuemax={100}
-        className="h-3 rounded-full bg-blue-600 transition-all"
+        className="h-3 rounded-full bg-blue-600 transition-all dark:bg-blue-500"
         style={{ width: `${clamped}%` }}
       />
     </div>
