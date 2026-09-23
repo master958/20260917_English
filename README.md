@@ -68,7 +68,6 @@ Spark 요금제에서 무료로 쓸 수 있는 기능만 사용합니다.
 | Authentication (Google) | 구글 로그인 | 무료 (전화 인증 제외) |
 | Cloud Firestore | 사용자 프로필·학습 진도 저장 | 저장 1GiB, 읽기 5만/일, 쓰기 2만/일 |
 | Analytics | 방문 통계 (프로덕션 빌드에서만) | 무료 |
-| Hosting (선택) | 사이트 배포 | 저장 10GB, 전송 360MB/일 |
 
 Cloud Storage·Cloud Functions는 Blaze(종량제) 요금제가 필요하므로 사용하지 않습니다.
 
@@ -88,7 +87,7 @@ users/{uid}
 ### Firebase 콘솔 설정 (최초 1회)
 
 1. **Authentication → 로그인 방법 → Google** 사용 설정
-2. **Authentication → 설정 → 승인된 도메인**에 배포 도메인 추가 (`localhost`는 기본 포함)
+2. **Authentication → 설정 → 승인된 도메인**에 Netlify 도메인(`xxx.netlify.app`) 추가 (`localhost`는 기본 포함)
 3. **Firestore Database → 데이터베이스 만들기** (프로덕션 모드, 리전은 `asia-northeast3` 서울 권장)
 4. 보안 규칙 배포: `firestore.rules`의 내용을 콘솔의 **Firestore → 규칙** 탭에 붙여넣거나 CLI로 배포
 
@@ -96,8 +95,10 @@ users/{uid}
 npm install -g firebase-tools
 firebase login
 firebase deploy --only firestore:rules
-# (선택) Firebase Hosting 배포
-npm run build && firebase deploy --only hosting
 ```
+
+### 배포 (Netlify)
+
+사이트는 Netlify로 배포합니다. `netlify.toml`에 빌드 명령(`npm run build`), 배포 폴더(`dist`), 그리고 React Router 경로를 `index.html`로 보내는 리다이렉트가 설정되어 있어 하위 페이지에서 새로고침해도 404가 나지 않습니다.
 
 보안 규칙은 로그인한 사용자가 자기 문서(`users/{uid}`)만 읽고 쓸 수 있게 제한합니다. 웹 설정값(`apiKey` 등)은 공개되어도 되는 식별자이며, 다른 프로젝트를 쓰려면 `.env.example`을 `.env.local`로 복사해 값을 바꾸면 됩니다.
