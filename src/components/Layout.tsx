@@ -32,6 +32,9 @@ export function Layout() {
           <NavLink to="/wrong-answers" className={navLinkClass}>
             오답노트
           </NavLink>
+          <NavLink to="/qna" className={navLinkClass}>
+            질문
+          </NavLink>
           <div className="ml-auto">
             <AuthButton />
           </div>

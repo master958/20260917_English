@@ -36,6 +36,7 @@ npm run dev
 - **독해 연습**: 난이도(초급/중급/고급)별 지문. 어려운 단어를 클릭하면 뜻 팝업이 표시되고, 지문마다 이해도 확인 문제가 있습니다.
 - **진도 관리**: 카테고리/지문별 완료 여부와 정답률을 localStorage에 저장하고, 홈 화면에서 전체 진도와 최근 학습 내역을 볼 수 있습니다.
 - **오답노트**: 틀린 문제를 다시 풀어 정답을 맞히면 자동으로 목록에서 제거됩니다.
+- **질문 게시판** (`/qna`): 누구나 질문과 답변을 읽을 수 있고, 구글 로그인한 사용자만 질문·답변을 작성할 수 있습니다. 본인이 쓴 글만 삭제할 수 있으며, 질문 작성자가 질문을 삭제하면 달린 답변도 함께 삭제됩니다.
 
 ## 폴더 구조
 
@@ -78,7 +79,14 @@ users/{uid}
   displayName, email, photoURL, lastLoginAt   # 로그인 시 갱신
   progress: { schemaVersion, grammar, reading, wrongAnswers }
   progressUpdatedAt
+
+questions/{questionId}                         # 질문 게시판 (누구나 읽기)
+  title(≤100자), content(≤2000자), authorId, authorName, authorPhoto, answerCount, createdAt
+  answers/{answerId}
+    content(≤1000자), authorId, authorName, authorPhoto, createdAt
 ```
+
+- 게시판 목록은 20개씩 불러오고, 끝까지 내리면 "더 보기"로 다음 20개를 가져와 읽기 횟수를 아낍니다.
 
 - 로그인하면 Firestore 진도를 1회 읽어 로컬 진도와 항목별로 병합합니다 (더 최근에 푼 기록 우선, 오답은 문제 ID로 합침).
 - 이후 진도가 바뀌면 1.5초 동안 모았다가 한 번에 저장해 쓰기 횟수를 아낍니다.
@@ -101,4 +109,4 @@ firebase deploy --only firestore:rules
 
 사이트는 Netlify로 배포합니다. `netlify.toml`에 빌드 명령(`npm run build`), 배포 폴더(`dist`), 그리고 React Router 경로를 `index.html`로 보내는 리다이렉트가 설정되어 있어 하위 페이지에서 새로고침해도 404가 나지 않습니다.
 
-보안 규칙은 로그인한 사용자가 자기 문서(`users/{uid}`)만 읽고 쓸 수 있게 제한합니다. 웹 설정값(`apiKey` 등)은 공개되어도 되는 식별자이며, 다른 프로젝트를 쓰려면 `.env.example`을 `.env.local`로 복사해 값을 바꾸면 됩니다.
+보안 규칙은 학습 진도(`users/{uid}`)는 본인만 읽고 쓰게 하고, 게시판은 작성자 위장·글자 수 초과·남의 글 수정/삭제·답변 수 조작을 막습니다. `firestore.rules`를 바꾼 뒤에는 콘솔에 다시 붙여넣어 게시해야 적용됩니다. 웹 설정값(`apiKey` 등)은 공개되어도 되는 식별자이며, 다른 프로젝트를 쓰려면 `.env.example`을 `.env.local`로 복사해 값을 바꾸면 됩니다.

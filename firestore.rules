@@ -1,10 +1,61 @@
 rules_version = '2';
 
-// 로그인한 사용자는 자기 문서(users/{uid})만 읽고 쓸 수 있다. 그 외 경로는 모두 차단.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function validText(value, maxSize) {
+      return value is string && value.size() > 0 && value.size() <= maxSize;
+    }
+
+    // 학습 진도: 로그인한 사용자는 자기 문서(users/{uid})만 읽고 쓸 수 있다.
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // 질문 게시판: 누구나 읽기, 로그인 사용자만 작성, 작성자만 삭제.
+    match /questions/{questionId} {
+      allow read: if true;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(
+             ['title', 'content', 'authorId', 'authorName', 'authorPhoto', 'answerCount', 'createdAt'])
+        && request.resource.data.authorId == request.auth.uid
+        && validText(request.resource.data.title, 100)
+        && validText(request.resource.data.content, 2000)
+        && request.resource.data.authorName is string
+        && request.resource.data.answerCount == 0
+        && request.resource.data.createdAt == request.time;
+
+      // 답변 추가/삭제 시 답변 수(answerCount)만 1씩 바꿀 수 있다.
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answerCount'])
+        && (request.resource.data.answerCount == resource.data.answerCount + 1
+            || request.resource.data.answerCount == resource.data.answerCount - 1);
+
+      allow delete: if signedIn() && resource.data.authorId == request.auth.uid;
+
+      match /answers/{answerId} {
+        allow read: if true;
+
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly(
+               ['content', 'authorId', 'authorName', 'authorPhoto', 'createdAt'])
+          && request.resource.data.authorId == request.auth.uid
+          && validText(request.resource.data.content, 1000)
+          && request.resource.data.authorName is string
+          && request.resource.data.createdAt == request.time
+          // 답변 수 증가와 함께 쓰일 때만 허용 (같은 batch)
+          && getAfter(/databases/$(database)/documents/questions/$(questionId)).data.answerCount
+             == get(/databases/$(database)/documents/questions/$(questionId)).data.answerCount + 1;
+
+        // 답변 작성자 또는 질문 작성자(질문 삭제 시)만 삭제 가능
+        allow delete: if signedIn()
+          && (resource.data.authorId == request.auth.uid
+              || get(/databases/$(database)/documents/questions/$(questionId)).data.authorId == request.auth.uid);
+      }
     }
   }
 }
