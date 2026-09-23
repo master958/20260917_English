@@ -10,7 +10,7 @@ export function useProgress() {
   if (!context) {
     throw new Error("useProgress는 ProgressProvider 내부에서만 사용할 수 있습니다.");
   }
-  const { state, dispatch } = context;
+  const { state, dispatch, syncStatus } = context;
 
   const submitGrammarQuiz = (
     categoryId: string,
@@ -78,6 +78,7 @@ export function useProgress() {
 
   return {
     state,
+    syncStatus,
     summary,
     submitGrammarQuiz,
     submitReadingQuiz,

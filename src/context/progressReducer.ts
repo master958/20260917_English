@@ -16,7 +16,8 @@ export type ProgressAction =
       payload: { passageId: string; correctCount: number; totalCount: number };
     }
   | { type: "REMOVE_WRONG_ANSWER"; payload: { questionId: string } }
-  | { type: "RESET_PROGRESS" };
+  | { type: "RESET_PROGRESS" }
+  | { type: "HYDRATE"; payload: ProgressState };
 
 export function progressReducer(
   state: ProgressState,
@@ -72,6 +73,9 @@ export function progressReducer(
         reading: {},
         wrongAnswers: [],
       };
+    }
+    case "HYDRATE": {
+      return action.payload;
     }
     default:
       return state;
