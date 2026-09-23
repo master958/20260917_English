@@ -1,6 +1,7 @@
 // 상단 내비게이션과 페이지 콘텐츠를 감싸는 공통 레이아웃
 import { NavLink, Outlet } from "react-router-dom";
 import { useTheme } from "../hooks/useTheme";
+import { AuthButton } from "./AuthButton";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-md px-3 py-2 text-sm font-medium ${
@@ -31,11 +32,14 @@ export function Layout() {
           <NavLink to="/wrong-answers" className={navLinkClass}>
             오답노트
           </NavLink>
+          <div className="ml-auto">
+            <AuthButton />
+          </div>
           <button
             type="button"
             onClick={toggleTheme}
             aria-label="다크모드 전환"
-            className="ml-auto rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             {theme === "dark" ? "☀️ 라이트" : "🌙 다크"}
           </button>

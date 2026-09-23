@@ -1,0 +1,9 @@
+# Netlify 빌드 설정: Vite 빌드 결과(dist)를 배포하고, React Router 경로는 모두 index.html로 보낸다.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
