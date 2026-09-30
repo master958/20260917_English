@@ -117,4 +117,29 @@ describe("ChatPage", () => {
     expect((await screen.findByText("went")).tagName).toBe("STRONG");
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
   });
+
+  it("선택한 레벨과 모드가 시스템 프롬프트에 반영되고 저장된다", async () => {
+    localStorage.setItem("english-app-gemini-api-key", "test-key");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ candidates: [{ content: { parts: [{ text: "ok" }] } }] }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderChat();
+    await userEvent.selectOptions(screen.getByLabelText("레벨"), "advanced");
+    await userEvent.selectOptions(screen.getByLabelText("모드"), "conversation");
+    await userEvent.type(screen.getByLabelText("메시지 입력"), "hello");
+    await userEvent.click(screen.getByRole("button", { name: "전송" }));
+    await screen.findByText("ok");
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    const prompt = body.systemInstruction.parts[0].text;
+    expect(prompt).toContain("advanced");
+    expect(prompt).toContain("Role-play");
+    expect(JSON.parse(localStorage.getItem("english-app-teacher-settings")!)).toEqual({
+      level: "advanced",
+      mode: "conversation",
+    });
+  });
 });

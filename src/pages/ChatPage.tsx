@@ -4,12 +4,16 @@ import type { FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   GEMINI_MODEL,
+  LEVEL_LABELS,
+  MODE_LABELS,
   clearApiKey,
   loadApiKey,
+  loadSettings,
   saveApiKey,
+  saveSettings,
   sendChat,
 } from "../services/geminiChat";
-import type { ChatMessage } from "../services/geminiChat";
+import type { ChatMessage, TeacherLevel, TeacherMode, TeacherSettings } from "../services/geminiChat";
 import { MarkdownMessage } from "../components/MarkdownMessage";
 
 const FOLLOW_UP_CHIPS = ["비슷한 문제 3개 더 내줘", "더 쉽게 설명해줘", "예문 더 보여줘"];
@@ -18,6 +22,7 @@ const STARTER_CHIPS = ["오늘의 영어 표현 알려줘", "현재완료와 과
 export function ChatPage() {
   const [apiKey, setApiKey] = useState(loadApiKey);
   const [keyInput, setKeyInput] = useState("");
+  const [settings, setSettings] = useState<TeacherSettings>(loadSettings);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,6 +48,12 @@ export function ChatPage() {
     setKeyInput("");
   };
 
+  const updateSettings = (patch: Partial<TeacherSettings>) => {
+    const next = { ...settings, ...patch };
+    setSettings(next);
+    saveSettings(next);
+  };
+
   const handleRemoveKey = () => {
     clearApiKey();
     setApiKey("");
@@ -56,7 +67,7 @@ export function ChatPage() {
     setError(null);
     setLoading(true);
     try {
-      const reply = await sendChat(apiKey, next);
+      const reply = await sendChat(apiKey, next, settings);
       setMessages([...next, { role: "model", text: reply }]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "알 수 없는 오류가 발생했습니다.");
@@ -142,6 +153,37 @@ export function ChatPage() {
             API 키 삭제
           </button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3 text-sm text-gray-700 dark:text-gray-300">
+        <label className="flex items-center gap-2">
+          레벨
+          <select
+            value={settings.level}
+            onChange={(e) => updateSettings({ level: e.target.value as TeacherLevel })}
+            className="rounded-md border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-900"
+          >
+            {Object.entries(LEVEL_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2">
+          모드
+          <select
+            value={settings.mode}
+            onChange={(e) => updateSettings({ mode: e.target.value as TeacherMode })}
+            className="rounded-md border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-900"
+          >
+            {Object.entries(MODE_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="h-[60vh] space-y-3 overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
