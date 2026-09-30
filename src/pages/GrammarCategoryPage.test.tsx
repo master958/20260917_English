@@ -53,6 +53,8 @@ describe("GrammarCategoryPage", () => {
     await user.click(screen.getByRole("button", { name: "채점하기" }));
 
     expect(await screen.findByText("결과: 3 / 4개 정답")).toBeInTheDocument();
+    // 틀린 1문제에만 AI 설명 버튼이 표시된다
+    expect(screen.getAllByRole("button", { name: /AI 선생님께 설명 듣기/ })).toHaveLength(1);
     expect(
       screen.getByText(
         "현재까지 완료되어 지금 상태에 영향을 주는 일이므로 현재완료 'have finished'가 적절합니다.",

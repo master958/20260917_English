@@ -1,6 +1,8 @@
 // 객관식 퀴즈를 진행하고 채점 결과를 보여주는 공용 컴포넌트
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { gradeQuiz } from "../services/scoring";
+import { buildExplainPrompt } from "../services/geminiChat";
 
 export interface QuizQuestionLike {
   id: string;
@@ -29,6 +31,7 @@ export function QuizRunner({
 }: QuizRunnerProps) {
   const [selections, setSelections] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
+  const navigate = useNavigate();
 
   const allAnswered = questions.every((question) => selections[question.id] !== undefined);
 
@@ -80,6 +83,24 @@ export function QuizRunner({
               );
             })}
           </div>
+          {submitted && selections[question.id] !== question.answerIndex && (
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/chat", {
+                  state: {
+                    initialPrompt: buildExplainPrompt({
+                      ...question,
+                      selectedIndex: selections[question.id],
+                    }),
+                  },
+                })
+              }
+              className="mt-3 rounded-md border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950/40"
+            >
+              🤖 AI 선생님께 설명 듣기
+            </button>
+          )}
           {submitted && question.explanation && (
             <p className="mt-3 rounded-md bg-gray-50 p-2 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-300">
               {question.explanation}
