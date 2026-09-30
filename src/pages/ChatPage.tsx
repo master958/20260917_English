@@ -11,6 +11,9 @@ import {
 } from "../services/geminiChat";
 import type { ChatMessage } from "../services/geminiChat";
 
+const FOLLOW_UP_CHIPS = ["비슷한 문제 3개 더 내줘", "더 쉽게 설명해줘", "예문 더 보여줘"];
+const STARTER_CHIPS = ["오늘의 영어 표현 알려줘", "현재완료와 과거의 차이가 뭐야?", "영어로 자기소개를 써볼게 교정해줘"];
+
 export function ChatPage() {
   const [apiKey, setApiKey] = useState(loadApiKey);
   const [keyInput, setKeyInput] = useState("");
@@ -165,6 +168,26 @@ export function ChatPage() {
         {loading && <p className="text-sm text-gray-500 dark:text-gray-400">선생님이 답변 중…</p>}
         <div ref={bottomRef} />
       </div>
+
+      {!loading && (
+        <div className="flex flex-wrap gap-2">
+          {(messages.length === 0
+            ? STARTER_CHIPS
+            : messages[messages.length - 1].role === "model"
+              ? FOLLOW_UP_CHIPS
+              : []
+          ).map((chip) => (
+            <button
+              key={chip}
+              type="button"
+              onClick={() => void submit(chip, messages)}
+              className="rounded-full border border-blue-200 px-3 py-1 text-xs text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950/40"
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+      )}
 
       {error && (
         <p

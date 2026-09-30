@@ -78,4 +78,23 @@ describe("ChatPage", () => {
     expect(screen.getByText("이 문제를 설명해 주세요")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it("빠른 답변 칩을 누르면 그 문장이 바로 전송된다", async () => {
+    localStorage.setItem("english-app-gemini-api-key", "test-key");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ candidates: [{ content: { parts: [{ text: "답변" }] } }] }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderChat();
+    await userEvent.click(screen.getByRole("button", { name: "오늘의 영어 표현 알려줘" }));
+    await screen.findByText("답변");
+    await userEvent.click(screen.getByRole("button", { name: "더 쉽게 설명해줘" }));
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const body = JSON.parse(fetchMock.mock.calls[1][1].body);
+    expect(body.contents).toHaveLength(3);
+    expect(body.contents[2].parts[0].text).toBe("더 쉽게 설명해줘");
+  });
 });
