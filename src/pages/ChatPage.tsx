@@ -10,6 +10,7 @@ import {
   sendChat,
 } from "../services/geminiChat";
 import type { ChatMessage } from "../services/geminiChat";
+import { MarkdownMessage } from "../components/MarkdownMessage";
 
 const FOLLOW_UP_CHIPS = ["비슷한 문제 3개 더 내줘", "더 쉽게 설명해줘", "예문 더 보여줘"];
 const STARTER_CHIPS = ["오늘의 영어 표현 알려줘", "현재완료와 과거의 차이가 뭐야?", "영어로 자기소개를 써볼게 교정해줘"];
@@ -155,13 +156,13 @@ export function ChatPage() {
             className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
+              className={`max-w-[85%] break-words rounded-lg px-3 py-2 text-sm ${
                 message.role === "user"
-                  ? "bg-blue-600 text-white"
+                  ? "whitespace-pre-wrap bg-blue-600 text-white"
                   : "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100"
               }`}
             >
-              {message.text}
+              {message.role === "model" ? <MarkdownMessage text={message.text} /> : message.text}
             </div>
           </div>
         ))}

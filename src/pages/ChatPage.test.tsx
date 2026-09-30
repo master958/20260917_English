@@ -97,4 +97,24 @@ describe("ChatPage", () => {
     expect(body.contents).toHaveLength(3);
     expect(body.contents[2].parts[0].text).toBe("더 쉽게 설명해줘");
   });
+
+  it("선생님 답변의 마크다운을 렌더링한다", async () => {
+    localStorage.setItem("english-app-gemini-api-key", "test-key");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: "**went**가 맞아요\n\n* 하나\n* 둘" }] } }],
+        }),
+      }),
+    );
+
+    renderChat();
+    await userEvent.type(screen.getByLabelText("메시지 입력"), "hi");
+    await userEvent.click(screen.getByRole("button", { name: "전송" }));
+
+    expect((await screen.findByText("went")).tagName).toBe("STRONG");
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+  });
 });
