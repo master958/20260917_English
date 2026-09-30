@@ -1,9 +1,12 @@
 // 오답노트: 틀린 문제를 다시 풀어보며 재학습하는 페이지 컴포넌트
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useProgress } from "../hooks/useProgress";
+import { buildExplainPrompt } from "../services/geminiChat";
 
 export function WrongAnswerNotePage() {
   const { state, removeWrongAnswer } = useProgress();
+  const navigate = useNavigate();
   const [retrySelections, setRetrySelections] = useState<Record<string, number>>({});
   const [feedback, setFeedback] = useState<Record<string, "correct" | "incorrect">>({});
 
@@ -66,6 +69,15 @@ export function WrongAnswerNotePage() {
                   );
                 })}
               </div>
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/chat", { state: { initialPrompt: buildExplainPrompt(entry) } })
+                }
+                className="mt-3 rounded-md border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950/40"
+              >
+                🤖 AI 선생님께 설명 듣기
+              </button>
               {status === "incorrect" && (
                 <p className="mt-2 rounded-md bg-gray-50 p-2 text-sm text-gray-600 dark:bg-gray-900/60 dark:text-gray-300">
                   {entry.explanation}

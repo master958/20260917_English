@@ -16,6 +16,26 @@ export const TEACHER_SYSTEM_PROMPT = [
   "Keep answers concise and well organized, and end with a short follow-up question or practice prompt when useful.",
 ].join(" ");
 
+export interface ExplainTarget {
+  prompt: string;
+  choices: string[];
+  answerIndex: number;
+  selectedIndex: number;
+}
+
+// 오답노트 문제를 AI 선생님에게 설명 요청하는 첫 메시지로 만든다.
+export function buildExplainPrompt(target: ExplainTarget): string {
+  const choices = target.choices.map((choice, index) => `${index + 1}. ${choice}`).join("\n");
+  return [
+    "다음 문제를 틀렸어요. 왜 정답이 맞고 내 답이 틀렸는지 쉽게 설명해 주세요.",
+    "",
+    `문제: ${target.prompt}`,
+    choices,
+    `정답: ${target.answerIndex + 1}번`,
+    `내가 고른 답: ${target.selectedIndex + 1}번`,
+  ].join("\n");
+}
+
 export function loadApiKey(): string {
   try {
     return localStorage.getItem(API_KEY_STORAGE_KEY) ?? "";

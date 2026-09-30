@@ -1,6 +1,7 @@
 // 사용자가 입력한 Gemini API 키로 AI 영어 선생님과 대화하는 채팅 화면
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   GEMINI_MODEL,
   clearApiKey,
@@ -18,6 +19,12 @@ export function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  // 오답노트 등에서 넘어온 첫 질문 (키가 준비되면 한 번만 자동 전송)
+  const [pendingPrompt, setPendingPrompt] = useState<string | null>(
+    () => (location.state as { initialPrompt?: string } | null)?.initialPrompt ?? null,
+  );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView?.({ behavior: "smooth" });
@@ -39,13 +46,9 @@ export function ChatPage() {
     setError(null);
   };
 
-  const handleSend = async (event: FormEvent) => {
-    event.preventDefault();
-    const text = input.trim();
-    if (!text || loading) return;
-    const next: ChatMessage[] = [...messages, { role: "user", text }];
+  const submit = async (text: string, base: ChatMessage[]) => {
+    const next: ChatMessage[] = [...base, { role: "user", text }];
     setMessages(next);
-    setInput("");
     setError(null);
     setLoading(true);
     try {
@@ -56,6 +59,22 @@ export function ChatPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (!pendingPrompt || !apiKey) return;
+    setPendingPrompt(null);
+    navigate(location.pathname, { replace: true, state: null });
+    void submit(pendingPrompt, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPrompt, apiKey]);
+
+  const handleSend = (event: FormEvent) => {
+    event.preventDefault();
+    const text = input.trim();
+    if (!text || loading) return;
+    setInput("");
+    void submit(text, messages);
   };
 
   if (!apiKey) {

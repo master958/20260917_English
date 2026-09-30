@@ -2,7 +2,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { ChatPage } from "./ChatPage";
+
+const renderChat = (state?: unknown) =>
+  render(
+    <MemoryRouter initialEntries={[{ pathname: "/chat", state }]}>
+      <ChatPage />
+    </MemoryRouter>,
+  );
 
 describe("ChatPage", () => {
   beforeEach(() => {
@@ -13,7 +21,7 @@ describe("ChatPage", () => {
   });
 
   it("API 키가 없으면 키 입력 폼을 보여주고, 저장하면 채팅 화면으로 전환한다", async () => {
-    render(<ChatPage />);
+    renderChat();
     await userEvent.type(screen.getByLabelText("Gemini API 키"), "test-key");
     await userEvent.click(screen.getByRole("button", { name: "저장하고 시작하기" }));
     expect(screen.getByLabelText("메시지 입력")).toBeInTheDocument();
@@ -28,7 +36,7 @@ describe("ChatPage", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<ChatPage />);
+    renderChat();
     await userEvent.type(screen.getByLabelText("메시지 입력"), "I goed home");
     await userEvent.click(screen.getByRole("button", { name: "전송" }));
 
@@ -49,10 +57,25 @@ describe("ChatPage", () => {
       }),
     );
 
-    render(<ChatPage />);
+    renderChat();
     await userEvent.type(screen.getByLabelText("메시지 입력"), "hi");
     await userEvent.click(screen.getByRole("button", { name: "전송" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("API key not valid");
+  });
+
+  it("오답노트에서 넘어온 질문은 키가 있으면 자동으로 전송한다", async () => {
+    localStorage.setItem("english-app-gemini-api-key", "test-key");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ candidates: [{ content: { parts: [{ text: "설명입니다" }] } }] }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderChat({ initialPrompt: "이 문제를 설명해 주세요" });
+
+    expect(await screen.findByText("설명입니다")).toBeInTheDocument();
+    expect(screen.getByText("이 문제를 설명해 주세요")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
