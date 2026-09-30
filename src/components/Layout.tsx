@@ -35,6 +35,9 @@ export function Layout() {
           <NavLink to="/qna" className={navLinkClass}>
             질문
           </NavLink>
+          <NavLink to="/chat" className={navLinkClass}>
+            AI 선생님
+          </NavLink>
           <div className="ml-auto">
             <AuthButton />
           </div>

@@ -11,6 +11,7 @@ import { ReadingListPage } from "./pages/ReadingListPage";
 import { ReadingPassagePage } from "./pages/ReadingPassagePage";
 import { QnaListPage } from "./pages/QnaListPage";
 import { QnaDetailPage } from "./pages/QnaDetailPage";
+import { ChatPage } from "./pages/ChatPage";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
               <Route path="/wrong-answers" element={<WrongAnswerNotePage />} />
               <Route path="/qna" element={<QnaListPage />} />
               <Route path="/qna/:questionId" element={<QnaDetailPage />} />
+              <Route path="/chat" element={<ChatPage />} />
             </Route>
           </Routes>
         </BrowserRouter>
