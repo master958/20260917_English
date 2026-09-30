@@ -15,6 +15,14 @@ import {
 } from "../services/geminiChat";
 import type { ChatMessage, TeacherLevel, TeacherMode, TeacherSettings } from "../services/geminiChat";
 import { MarkdownMessage } from "../components/MarkdownMessage";
+import {
+  isRecognitionSupported,
+  isSynthesisSupported,
+  speak,
+  startRecognition,
+  stopSpeaking,
+} from "../services/speech";
+import type { Recognizer } from "../services/speech";
 
 const FOLLOW_UP_CHIPS = ["비슷한 문제 3개 더 내줘", "더 쉽게 설명해줘", "예문 더 보여줘"];
 const STARTER_CHIPS = ["오늘의 영어 표현 알려줘", "현재완료와 과거의 차이가 뭐야?", "영어로 자기소개를 써볼게 교정해줘"];
@@ -25,6 +33,9 @@ export function ChatPage() {
   const [settings, setSettings] = useState<TeacherSettings>(loadSettings);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
+  const [listening, setListening] = useState(false);
+  const [autoRead, setAutoRead] = useState(false);
+  const recognizerRef = useRef<Recognizer | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -69,6 +80,7 @@ export function ChatPage() {
     try {
       const reply = await sendChat(apiKey, next, settings);
       setMessages([...next, { role: "model", text: reply }]);
+      if (autoRead) speak(reply);
     } catch (e) {
       setError(e instanceof Error ? e.message : "알 수 없는 오류가 발생했습니다.");
     } finally {
@@ -83,6 +95,29 @@ export function ChatPage() {
     void submit(pendingPrompt, []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingPrompt, apiKey]);
+
+  const toggleListening = () => {
+    if (listening) {
+      recognizerRef.current?.stop();
+      return;
+    }
+    const recognizer = startRecognition(
+      (text) => setInput((prev) => (prev ? `${prev} ${text}` : text)),
+      () => {
+        recognizerRef.current = null;
+        setListening(false);
+      },
+    );
+    if (recognizer) {
+      recognizerRef.current = recognizer;
+      setListening(true);
+    }
+  };
+
+  useEffect(() => () => {
+    recognizerRef.current?.stop();
+    stopSpeaking();
+  }, []);
 
   const handleSend = (event: FormEvent) => {
     event.preventDefault();
@@ -186,6 +221,20 @@ export function ChatPage() {
         </label>
       </div>
 
+      {isSynthesisSupported() && (
+        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="checkbox"
+            checked={autoRead}
+            onChange={(e) => {
+              setAutoRead(e.target.checked);
+              if (!e.target.checked) stopSpeaking();
+            }}
+          />
+          답변 자동 읽기 (영어 문장만)
+        </label>
+      )}
+
       <div className="h-[60vh] space-y-3 overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
         {messages.length === 0 && (
           <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -205,6 +254,16 @@ export function ChatPage() {
               }`}
             >
               {message.role === "model" ? <MarkdownMessage text={message.text} /> : message.text}
+              {message.role === "model" && isSynthesisSupported() && (
+                <button
+                  type="button"
+                  onClick={() => speak(message.text)}
+                  aria-label="영어 읽어주기"
+                  className="mt-1 text-xs text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  🔊 듣기
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -249,6 +308,21 @@ export function ChatPage() {
           placeholder="질문이나 영어 문장을 입력하세요"
           className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
         />
+        {isRecognitionSupported() && (
+          <button
+            type="button"
+            onClick={toggleListening}
+            aria-pressed={listening}
+            aria-label={listening ? "음성 입력 중지" : "음성 입력"}
+            className={`rounded-md border px-3 py-2 text-sm ${
+              listening
+                ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300"
+                : "border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            }`}
+          >
+            🎤
+          </button>
+        )}
         <button
           type="submit"
           disabled={loading || !input.trim()}

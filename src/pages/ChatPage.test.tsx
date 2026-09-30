@@ -1,6 +1,6 @@
 // AI 영어 선생님 채팅 화면: API 키 입력 → 대화 → 오류 표시 흐름 테스트
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { ChatPage } from "./ChatPage";
@@ -141,5 +141,56 @@ describe("ChatPage", () => {
       level: "advanced",
       mode: "conversation",
     });
+  });
+
+  it("음성 입력 결과가 입력창에 채워지고, 읽어주기는 영어 문장만 읽는다", async () => {
+    localStorage.setItem("english-app-gemini-api-key", "test-key");
+    class FakeRecognition {
+      static last: FakeRecognition;
+      lang = "";
+      interimResults = false;
+      onresult: (e: unknown) => void = () => {};
+      onerror = () => {};
+      onend: () => void = () => {};
+      start() {
+        FakeRecognition.last = this;
+      }
+      stop() {
+        this.onend();
+      }
+    }
+    vi.stubGlobal("SpeechRecognition", FakeRecognition);
+    const speakMock = vi.fn();
+    const cancelMock = vi.fn();
+    vi.stubGlobal("SpeechSynthesisUtterance", function (this: { text: string }, text: string) {
+      this.text = text;
+    });
+    Object.defineProperty(window, "speechSynthesis", {
+      configurable: true,
+      value: { speak: speakMock, cancel: cancelMock },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: "**Hello there!**\n한국어 설명입니다\n- How are you?" }] } }],
+        }),
+      }),
+    );
+
+    renderChat();
+    await userEvent.click(screen.getByRole("button", { name: "음성 입력" }));
+    act(() => FakeRecognition.last.onresult({ results: [[{ transcript: "I goed home" }]] }));
+    expect(screen.getByLabelText("메시지 입력")).toHaveValue("I goed home");
+    await userEvent.click(screen.getByRole("button", { name: "음성 입력 중지" }));
+    expect(screen.getByRole("button", { name: "음성 입력" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "전송" }));
+    await screen.findByText("한국어 설명입니다");
+    await userEvent.click(screen.getByRole("button", { name: "영어 읽어주기" }));
+    expect(speakMock.mock.calls[0][0].text).toBe("Hello there!. How are you?");
+
+    Reflect.deleteProperty(window, "speechSynthesis");
   });
 });
