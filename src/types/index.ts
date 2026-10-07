@@ -5,3 +5,4 @@ export * from "./reading";
 export * from "./dictionary";
 export * from "./progress";
 export * from "./board";
+export * from "./contents";

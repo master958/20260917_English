@@ -10,6 +10,23 @@ service cloud.firestore {
       return value is string && value.size() > 0 && value.size() <= maxSize;
     }
 
+    // 콘텐츠 스튜디오(260927contents 저장소) 관리자 전용 데이터. 이 이메일로 로그인한 계정만 읽고 쓸 수 있다.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'master@ssenc.co.kr'
+        && request.auth.token.email_verified == true;
+    }
+
+    // Contents Input: /ingest가 scripts/upload.mjs로 올리는 원본 콘텐츠 (관리자만 읽기·쓰기)
+    match /contents_input/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Contents Output: /draft가 저장하거나 관리자 페이지에서 직접 추가하는 결과물 (관리자만 읽기·쓰기)
+    match /contents_output/{docId} {
+      allow read, write: if isAdmin();
+    }
+
     // 학습 진도: 로그인한 사용자는 자기 문서(users/{uid})만 읽고 쓸 수 있다.
     match /users/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;

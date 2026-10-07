@@ -1,6 +1,7 @@
 // 상단 내비게이션과 페이지 콘텐츠를 감싸는 공통 레이아웃
 import { NavLink, Outlet } from "react-router-dom";
 import { useTheme } from "../hooks/useTheme";
+import { useIsAdmin } from "../hooks/useAdmin";
 import { AuthButton } from "./AuthButton";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -12,6 +13,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 export function Layout() {
   const { theme, toggleTheme } = useTheme();
+  const isAdmin = useIsAdmin();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -35,6 +37,11 @@ export function Layout() {
           <NavLink to="/qna" className={navLinkClass}>
             질문
           </NavLink>
+          {isAdmin && (
+            <NavLink to="/contents-admin" className={navLinkClass}>
+              콘텐츠 창고
+            </NavLink>
+          )}
           <div className="ml-auto">
             <AuthButton />
           </div>
